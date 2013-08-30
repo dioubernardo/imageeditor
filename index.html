@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Image Editor</title>
+	<meta http-equiv="Content-type" content="text/html" />
+	<script src="js/jquery.min.js"></script>
+	<script src="js/jquery.Jcrop.min.js"></script>
+	<script src="js/image-editor.js"></script>
+	<link rel="stylesheet" href="css/jquery.Jcrop.min.css" type="text/css" />
+
+	<style type="text/css">
+	.imageEditor{
+		background: url(img/bg.png);
+		border: 2px solid #cacaca;
+	}
+	.imageEditor.dropFile{
+		border-color: green;
+	}
+	.preview img{
+		border:1px solid red;
+		background:pink;
+	}
+	.custombtUpload{
+		position:relative;
+		display:block;
+		overflow:hidden;
+		width:55px;
+	}
+	.custombtUpload button{
+		width:100%
+	}
+	.custombtUpload input{
+		position:absolute;
+		top:0;
+		right:0;
+		opacity:0;
+		-moz-opacity: 0;
+		filter: alpha(opacity=0);
+		cursor: default;
+	}
+	
+	.menu{
+		list-style-type:none;
+		padding: 0;
+		margin: 0;
+		font-size:12px;
+	}
+	.menu li{
+		padding: 0;
+		margin: 0 0 20px;
+	}
+	.menu b{
+		display:block
+	}
+	</style>
+
+</head>
+<body>
+
+
+	<div>
+		<div style="float:left;margin:10px">
+
+			<div class="imageEditor" style="width:578px;height:400px"></div>
+		
+		</div>
+		<div style="float:left;margin:10px;width:450px">
+		
+			<ul class="menu">
+				<li>
+					<div class="custombtUpload">
+						<button>open</button>
+						<input id="load" type="file" />
+					</div>
+					Apartir do PC sem fazer upload para o servidor ou arrastar uma imagem e soltar sobre a tela de desenho.
+				</li>
+				<li>
+					<button id="select">select</button><br />
+					Selecionar e pressione DEL para remover. A seleção pode ser movida utilizando as setas direcionais com ou sem o SHIFT pressionado.
+				</li>
+				<li>
+					<button id="delete">delete</button> torelancia <input maxlength="2" size="4" id="tol" value="10" /><br />
+					Limpar áreas com cores semelhantes
+				</li>
+				<li>
+					<button id="clean">clean</button><br />
+					Se existir uma seleção ela será removida caso contrário a imagem inteira será limpa.
+				</li>
+				<li>
+					<button id="undo">undo</button><br />
+					Desfazer a ultima ação, também pode ser utilizado CTRL + Z.
+				</li>
+				<li>
+					<form action="show.php" method="post" onsubmit="presumit()">
+						<input type="button" id="preview" value="preview" />
+						<input type="submit" id="submit" value="send to server" />
+						<input type="checkbox" checked="checked" id="autocrop" /> auto crop
+						<input type="hidden" name="imageData">
+						<br />
+						no preview a imagem recebeu uma borda roza para mostrar seu limite e um fundo roza para identificar a transparencia
+					</form>
+				</li>
+			</ul>
+			
+		</div>
+		<br clear="all" />
+	</div>	
+	<div class="preview"></div>
+	
+	<script type="text/javascript">
+
+		imageEditor.init('.imageEditor', true);
+		imageEditor.load('teste.png');
+		
+		$('#load').change(function(){
+			if (this.files.length > 0)
+				imageEditor.load(this.files[0]);
+		});
+		
+		$('#clean').click(function(){
+			imageEditor.clearSelection();
+		});
+
+		$('#undo').click(function(){
+			imageEditor.undo();
+		});
+		
+		$('#delete').click(function(){
+			imageEditor.enableClickAndDelete('#tol');
+		});		
+		
+		$('#select').click(function(){
+			imageEditor.enableSelect();
+		});
+		
+		function presumit(){
+			$("[name=imageData]").val(imageEditor.getData($('#autocrop').is(':checked')));
+			return true;
+		}
+
+		$('#preview').click(function(){
+			var img = document.createElement("img");
+			img.src = imageEditor.getData($('#autocrop').is(':checked'));
+			$('.preview').html(img);
+		});
+	
+	</script>
+<script type="text/javascript" src="http://www.google-analytics.com/ga.js"></script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-8328309-1");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+</body>
+</html>
