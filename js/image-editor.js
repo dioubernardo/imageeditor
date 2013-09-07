@@ -7,6 +7,7 @@ var imageEditor = {
 	loadImagesOnCenter: true,
 	jcropAPI: null,
 	selecting: false,
+	msgFileError: 'Formato de imagem não suportado',
 	o: null,
 	init: function(selector, allowDrop){
 		this.o = $(selector).css({
@@ -101,8 +102,8 @@ var imageEditor = {
 				i.context.drawImage(imageObj, 0, 0, imageObj.width, imageObj.height, dx, dy, width, height);
 			};
 			imageObj.onerror = function(){
-				alert('Formato de imagem não suportado');
-			}
+				alert(i.msgFileError);
+			};
 			imageObj.src = src;
 		}else{
 			var reader = new FileReader();
@@ -137,9 +138,41 @@ var imageEditor = {
 		if (this.history > this.limitUndo)
 			this.history.shift();
 	},
-	floodFill: function(x, y, t){
+	_floodFillNotContinuo: function(x, y, t, color){
+		/* Global vars */
+		var imgd = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+		var data = imgd.data;
+		
+		var p = ((y*this.canvas.width)+x)*4;
+		var target = {r: data[p], g: data[p+1], b: data[p+2], a: data[p+3]};		
+		var len = data.length;
+		
+		for(p=0;p<len; p=p+4){
+			if(
+				Math.abs(target.r-data[p]) > t || 
+				Math.abs(target.g-data[p+1]) > t ||
+				Math.abs(target.b-data[p+2]) > t ||
+				Math.abs(target.b-data[p+3]) > t
+			)
+				continue;
+			
+			data[p] = color.r;
+			data[p+1] = color.g;
+			data[p+2] = color.b;
+			data[p+3] = color.a;
+		}
+		this.context.putImageData(imgd, 0, 0);
+		
+	},
+	floodFill: function(x, y, t, continuo, color){
 		this.putToUndo();
 
+		if (typeof color == 'undefined')
+			color = {r:0, g:0, b:0, a:0};
+		
+		if (continuo === false)
+			return this._floodFillNotContinuo(x, y, t, color);
+		
 		/* Global vars */
 		var imgd = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
 		var data = imgd.data;
@@ -157,19 +190,19 @@ var imageEditor = {
 			visitados[p] = true;
 
 			if(
-				data[p+3] == 0 ||
 				Math.abs(d.r-data[p]) > t || 
 				Math.abs(d.g-data[p+1]) > t ||
-				Math.abs(d.b-data[p+2]) > t
+				Math.abs(d.b-data[p+2]) > t ||
+				Math.abs(d.b-data[p+3]) > t
 			)
 				return;
 
 			var r = data[p], g = data[p+1], b = data[p+2], a = data[p+3]; 
 			
-			data[p] = 0;
-			data[p+1] = 0;
-			data[p+2] = 0;
-			data[p+3] = 0;
+			data[p] = color.r;
+			data[p+1] = color.g;
+			data[p+2] = color.b;
+			data[p+3] = color.a;
 
 			if (d.x < maxX)
 				itens.push({r: r, g: g, b: b, a: a, x: d.x+1, y: d.y});
@@ -239,13 +272,13 @@ var imageEditor = {
 		this.o.find('.jcrop-holder').hide();
 		this.selecting = false;
 	},
-	enableClickAndDelete: function(selectorTolerance){
+	enableClickAndDelete: function(options){
 		var i = this;
 		this.disableSelect();
 		this.o.find('canvas').unbind('click').bind('click', function(e){
 			i.disableClickAndDelete();
 			var offset = i.o.offset(); 
-			i.floodFill(parseInt(e.pageX - offset.left), parseInt(e.pageY - offset.top), $(selectorTolerance).val());
+			i.floodFill(parseInt(e.pageX - offset.left), parseInt(e.pageY - offset.top), $(options.selectorTolerance).val(), $(options.selectorContinuo).is(':checked'));
 		}).css('cursor', 'crosshair');
 	},
 	disableClickAndDelete: function(){

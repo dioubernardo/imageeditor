@@ -79,7 +79,7 @@
 					Selecionar e pressione DEL para remover. A seleção pode ser movida utilizando as setas direcionais com ou sem o SHIFT pressionado.
 				</li>
 				<li>
-					<button id="delete">delete</button> torelancia <input maxlength="2" size="4" id="tol" value="10" /><br />
+					<button id="delete">delete</button> torelancia <input maxlength="2" size="4" id="tol" value="10" /> continuo <input type="checkbox" id="continuo"><br />
 					Limpar áreas com cores semelhantes
 				</li>
 				<li>
@@ -126,7 +126,10 @@
 		});
 		
 		$('#delete').click(function(){
-			imageEditor.enableClickAndDelete('#tol');
+			imageEditor.enableClickAndDelete({
+				selectorTolerance: '#tol',	
+				selectorContinuo: '#continuo'
+			});
 		});		
 		
 		$('#select').click(function(){
